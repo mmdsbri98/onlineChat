@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://kit.fontawesome.com/f1209bd6f2.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    
+    <style> 
+        #loginContainer {
+            position: fixed;
+            top: 200px;
+            z-index: 1;
+        }
+
+        #loginContainer .form-group {
+            padding: 0
+        }
+
+        #chatForm {
+            position: fixed;
+            bottom: 0px;
+            opacity: 0;
+        }
+
+        #chatHistory {
+            opacity: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            overflow: auto;
+            border: 1px solid rebeccapurple;
+            border-radius: 5px;
+            height: 570px;
+            position: fixed;
+            bottom: 50px;
+            padding: 20px
+        }
+        .online{
+            opacity: 0;
+        }
+    </style>
+
+    <title>Global Chat</title>
+</head>
+<body>
+
+    <div id="loginContainer" class="col-md-4 offset-md-4">
+        <form class="form-inline">
+            <div class="form-group mb-2 col-md-12">
+                <label for="username" class="sr-only" >username</label>
+                <input type="text" class="col-md-12 form-control" id="username" placeholder="Enter your username">
+            </div>
+            <button type="submit" class="btn btn-success mb-2 col-md-12" id="loginBtn">Submit Username</button>
+        </form>     
+    </div>
+
+    <div class="col-md-9 table-dark" id="chatHistory">
+    </div>
+    <div class="col-md-3 alert alert-success online" style="float: right;">
+    <h3 style="font-family: cursive;">Online Users</h3>
+    </div>
+
+    <div id="chatForm" class="col-md-9 table-dark" >
+        <form class="form-inline">
+            <div class="form-group mb-2 col-md-10" >
+                <label for="username" class="sr-only">Email</label>
+                <input type="text" class="col-md-12 form-control alert-dark" id="user" value="">
+            
+            <button style="border: none;" type="submit" id="miel" class="table-dark mb-2 col-md-2"><i class="fa fa-paper-plane"></i></button>
+          </div>
+  
+ </form>  </div>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <script>
+        let username
+        let clientSocket=io()
+        $('#loginBtn').click(function(){
+            event.preventDefault()
+            username=$('#username').val()
+            clientSocket.emit('login',{username})
+            $('#username').css('opacity',0)
+            $('#loginBtn').css('opacity',0)
+            
+            $('#chatForm').css('opacity',1)
+            $('#chatHistory').css('opacity',1)
+            $('.online').css('opacity',1)
+        })
+        clientSocket.on('login',(data)=>{
+            console.log(data.msg);
+            
+        })
+        $('#miel').click(function(){
+            event.preventDefault()
+            let massege=$('#user').val()
+            console.log(massege);
+            
+            clientSocket.emit('sendMassege',{massege,username})
+            $('#chatHistory').append(
+                
+                `<div style:"color:green float:right;" >YOU</div> 
+                <div class="alert " style=' background-color:lightgreen;width:200px;color:black'>${massege}</div>
+                
+                
+                `
+            )
+            $(".form-control").html(' ')
+
+        })  
+        clientSocket.on('redirect',(data)=>{
+            console.log(data);
+            
+            $('#chatHistory').append(
+                `<div style='align-self: flex-start;'><div style="color:blue;">${data.username}</div>
+                <div class="alert alert-info" style=' width:200px'>${data.massege}</div>
+                </div>
+                 
+                `
+        )})  
+        clientSocket.emit('disconnect',{username})
+        clientSocket.on('online',(data)=>{
+            event.preventDefault()
+            $('.online').html(' ')
+            $('.online').append(' <h3 style="font-family: cursive;">Online Users</h3>')
+           
+                for(let j=0;j<data.length;j++){
+                    $('.online').append(`
+                          <div style="font-family: cursive;">${data[j]}</div>
+                    `)
+                }
+
+                
+            
+            
+            
+
+        })        
+
+        
+        
+
+    </script>
+</body>
+</html>
